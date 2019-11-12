@@ -1,6 +1,6 @@
 /**
  * 交易流程控制
- * @author 孟庆云
+ * @author Lucifer
  */
 
 // 设置交易流程的全局参数
@@ -26,7 +26,7 @@ if (!window.currentTradeData) {
 
 /**
  * 获取下一个节点的名称
- * @author 孟庆云
+ * @author Lucifer
  */
 function getBackStep(flow, step) {
   if (flow.title === step) {
@@ -53,7 +53,7 @@ function getCurrentTradeStepName() {
 export default {
   /**
    * 获取当前的交易码
-   * @author 孟庆云
+   * @author Lucifer
    */
   getTradeCode() {
     return window.tradeCode;
@@ -61,7 +61,7 @@ export default {
 
   /**
    * 设置当前交易码
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradecode 交易码
    */
   setTradeCode(tradecode) {
@@ -70,7 +70,7 @@ export default {
 
   /**
    * 设置当前交易流程
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradeflow 当前交易流程
    */
   setTradeFlow(tradeflow) {
@@ -80,7 +80,7 @@ export default {
 
   /**
    * 进入交易的下一个节点
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradepage 当前交易页面对象
    * @param out 出口名称(可不传，默认为default)
    */
@@ -97,7 +97,7 @@ export default {
 
   /**
    * 退回到交易的上一个节点
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradepage 当前交易页面对象
    */
   back(tradepage) {
@@ -111,7 +111,7 @@ export default {
 
   /**
    * 退出当前交易
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradepage 当前交易页面对象
    */
   exitTrade(tradepage) {
@@ -125,7 +125,7 @@ export default {
 
   /**
    * 设置交易数据
-   * @author 孟庆云
+   * @author Lucifer
    * @param key 交易数据Key
    * @param value 交易数据Value
    */
@@ -139,7 +139,7 @@ export default {
 
   /**
    * 获取交易数据
-   * @author 孟庆云
+   * @author Lucifer
    * @param key 交易数据Key
    */
   getTradeData(key) {
@@ -152,7 +152,7 @@ export default {
 
   /**
    * 获取交易全部数据
-   * @author 孟庆云
+   * @author Lucifer
    */
   getAllTradeData() {
     if (!window.currentTradeData) {
@@ -164,7 +164,7 @@ export default {
 
   /**
    * 根据Key删除交易数据
-   * @author 孟庆云
+   * @author Lucifer
    * @param key 交易数据Key
    */
   removeTradeData(key) {
@@ -177,7 +177,7 @@ export default {
 
   /**
    * 清空交易数据
-   * @author 孟庆云
+   * @author Lucifer
    */
   clearTradeData() {
     window.currentTradeData = {};
@@ -185,7 +185,7 @@ export default {
 
   /**
    * 开始交易
-   * @author 孟庆云
+   * @author Lucifer
    * @param tradepage 交易画面
    */
   startTrade(tradepage) {
