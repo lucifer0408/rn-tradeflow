@@ -5,10 +5,6 @@ module.exports = {
       {
         "paths": [
           {
-            "rootPathPrefix": "@/",
-            "rootPathSuffix": "./src/"
-          },
-          {
             "rootPathPrefix": "$/",
             "rootPathSuffix": "./src/"
           }
