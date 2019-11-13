@@ -4,9 +4,6 @@ const process = require('process');
 
 const program = require('commander');
 
-// 初始化交易界面
-// const initTradePage = require("../command/init-tradepage");
-
 function run() {
   program
     .version(packageVersion)

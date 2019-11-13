@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var program = require('commander');
+const program = require('commander');
 const initTradePage = require("../src/init-page");
 
 program.on('--help', () => {

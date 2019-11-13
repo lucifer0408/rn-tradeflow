@@ -8,7 +8,7 @@ const babelPlugin = require(`${process.cwd()}/babel.config`).plugins;
 
 /**
  * 初始化页面
- * @author 孟庆云
+ * @author Lucifer
  * */
 module.exports = function(tradecode, filename) {
   console.log("交易码: ", tradecode);
@@ -60,8 +60,6 @@ module.exports = function(tradecode, filename) {
     };
 
     tradeConfig.pages.push(tradePageConfig);
-
-    // console.log(JSON.stringify(tradeConfig, null, "\t"));
 
     // 写入交易流程配置
     fs.writeFileSync(tradeConfigPath, JSON.stringify(tradeConfig, null, "\t"), { encoding: "UTF-8" });

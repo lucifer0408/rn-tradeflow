@@ -2,12 +2,12 @@
   "name": "trade-cli",
   "version": "1.0.0",
   "description": "TradeInitClient",
-  "main": "./bin/agree",
+  "main": "./bin/agree.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "agree": "./bin/agree"
+    "agree": "./bin/agree.js"
   },
   "author": "Lucifer",
   "license": "MIT",
