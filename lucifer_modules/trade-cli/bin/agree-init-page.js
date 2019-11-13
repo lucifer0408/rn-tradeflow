@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const program = require('commander');
-const initPage = require("../src/init-notradepage");
+const initPage = require("../src/init-page");
 
 program.on('--help', () => {
   showHelp();
