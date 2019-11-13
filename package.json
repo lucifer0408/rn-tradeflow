@@ -7,7 +7,8 @@
     "ios": "react-native run-ios",
     "start": "node ./build/build-tradesteps && react-native start --reset-cache",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "init-tradepage": "agree init-tradepage"
   },
   "dependencies": {
     "react": "16.9.0",
@@ -19,6 +20,7 @@
     "@babel/core": "^7.7.2",
     "@babel/runtime": "^7.7.2",
     "@react-native-community/eslint-config": "^0.0.5",
+    "agree-cli": "./lucifer_modules/trade-cli",
     "babel-jest": "^24.9.0",
     "babel-plugin-root-import": "^6.4.1",
     "chalk": "^3.0.0",

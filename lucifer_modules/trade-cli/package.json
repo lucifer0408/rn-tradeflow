@@ -1,0 +1,19 @@
+{
+  "name": "trade-cli",
+  "version": "1.0.0",
+  "description": "TradeInitClient",
+  "main": "./bin/agree",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "agree": "./bin/agree"
+  },
+  "author": "Lucifer",
+  "license": "MIT",
+  "devDependencies": {
+    "chalk": "^3.0.0",
+    "co": "^4.6.0",
+    "commander": "^4.0.1"
+  }
+}

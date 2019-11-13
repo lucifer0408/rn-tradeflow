@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+const packageVersion = require('../package.json').version;
+const process = require('process');
+
+const program = require('commander');
+
+// 初始化交易界面
+// const initTradePage = require("../command/init-tradepage");
+
+function run() {
+  program
+    .version(packageVersion)
+    .usage('<command> [options]')
+    .command('init-tradepage', 'init from page template')
+    .parse(process.argv);
+}
+
+run();
