@@ -8,6 +8,8 @@
     "start": "node ./build/build-tradesteps && react-native start --reset-cache",
     "test": "jest",
     "lint": "eslint .",
+    "init-page": "agree init-page",
+    "init-trade": "agree init-trade",
     "init-tradepage": "agree init-tradepage"
   },
   "dependencies": {

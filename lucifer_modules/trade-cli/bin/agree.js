@@ -8,7 +8,9 @@ function run() {
   program
     .version(packageVersion)
     .usage('<command> [options]')
-    .command('init-tradepage', 'init from page template')
+    .command('init-tradepage', 'init from tradepage template')
+    .command('init-trade', 'init trade')
+    .command('init-page', 'init from page template')
     .parse(process.argv);
 }
 
