@@ -78,6 +78,7 @@ window.exitTrade = () => {
     window.tradepage = null;
   }
   window.tradeEvent.remove();
+  window.tradeEvent = null;
   return true;
 }
 
