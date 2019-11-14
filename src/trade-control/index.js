@@ -2,6 +2,7 @@
  * 交易流程控制
  * @author Lucifer
  */
+import { BackHandler } from "react-native";
 
 // 设置交易流程的全局参数
 // 交易码
@@ -24,30 +25,60 @@ if (!window.currentTradeData) {
   window.currentTradeData = {};
 }
 
-/**
- * 获取下一个节点的名称
- * @author Lucifer
- */
-function getBackStep(flow, step) {
-  if (flow.title === step) {
-    return flow;
-  } else {
-    for (let key in flow) {
-      if (key !== "title" && key !== "back") {
-        let backStep = getBackStep(flow[key], step);
-        if (backStep) {
-          return backStep;
-        }
-      }
-    }
-  }
-}
-
 function getCurrentTradeStep() {
   return window.currentTradeStep[window.currentTradeStep.length - 1];
 }
 function getCurrentTradeStepName() {
   return getCurrentTradeStep().title;
+}
+
+/**
+ * 保存当前交易的全部信息
+ * @author Lucifer
+ */
+function saveCurrentTradeToStorage() {
+  if (window.$Storage) {
+    $Storage.save({
+      key: 'tradeInfo',
+      data: JSON.stringify({
+        tradeCode: window.tradeCode,
+        tradeFlow: window.tradeFlow,
+        currentTradeStep: window.currentTradeStep,
+        currentTradeData: window.currentTradeData
+      })
+    });
+  } else {
+    console.log("没有本地存储模块！");
+  }
+}
+
+function clearCurrentTradeFromStorage() {
+  if (window.$Storage) {
+    $Storage.remove({
+      key: 'tradeInfo',
+    });
+  } else {
+    console.log("没有本地存储模块！");
+  }
+}
+
+function clearTradeData() {
+  window.currentTradeData = {};
+}
+
+window.exitTrade = () => {
+  // 清空交易相关数据
+  window.tradeCode = null;
+  window.tradeFlow = null;
+  window.currentTradeStep.splice(0, window.currentTradeStep.length);
+  clearTradeData();
+  clearCurrentTradeFromStorage();
+  if (window.tradepage) {
+    window.tradepage.props.navigation.goBack();
+    window.tradepage = null;
+  }
+  window.tradeEvent.remove();
+  return true;
 }
 
 export default {
@@ -81,46 +112,84 @@ export default {
   /**
    * 进入交易的下一个节点
    * @author Lucifer
-   * @param tradepage 当前交易页面对象
    * @param out 出口名称(可不传，默认为default)
    */
-  nextStep(tradepage, out) {
+  nextStep(out) {
     if (!out) {
       out = "default";
     }
 
-    window.currentTradeStep.push(getCurrentTradeStep()[out]);
-    const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
+    if (out === "title" || out === "back") {
+      alert("流程出口信息错误！");
+      return;
+    }
 
-    tradepage.props.navigation.replace(routerName);
+    if (!getCurrentTradeStep()[out]) {
+      alert(`当前的流程节点出口“${out}”不存在！`);
+    } else {
+      window.currentTradeStep.push(getCurrentTradeStep()[out]);
+      const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
+
+      saveCurrentTradeToStorage();
+
+      window.tradepage.props.navigation.replace(routerName);
+    }
   },
 
   /**
    * 退回到交易的上一个节点
    * @author Lucifer
    * @param tradepage 当前交易页面对象
+   * @param count 需要回退的步骤数量，默认为1
    */
-  back(tradepage) {
-    if (window.currentTradeStep.length > 0) {
-      window.currentTradeStep.pop();
-      const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
+  back(count) {
+    if (window.currentTradeStep.length > 1) {
+      if (!count) {
+        count = 1;
+      }
+      // 逐步弹出流程记录栈顶元素；如果碰到流程不允许退回的情况，直接break，然后开始计算需要跳转到的目标地址
+      let stepCount = 0;
+      for (let i = 0; i < count; i++) {
+        if (window.currentTradeStep.length === 1) {
+          break;
+        }
+        if (!(window.currentTradeStep[window.currentTradeStep.length - 1].back == false)) {
+          stepCount++;
+          window.currentTradeStep.pop();
+        } else {
+          break;
+        }
+      }
 
-      tradepage.props.navigation.replace(routerName);
+      if (stepCount > 0) {
+        const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
+
+        saveCurrentTradeToStorage();
+
+        window.tradepage.props.navigation.replace(routerName);
+      } else {
+        alert("当前流程节点不允许退回");
+      }
+    } else if (window.currentTradeStep.length === 1) {
+      window.exitTrade();
     }
   },
 
   /**
    * 退出当前交易
    * @author Lucifer
-   * @param tradepage 当前交易页面对象
    */
-  exitTrade(tradepage) {
-    // 清空交易相关数据
-    window.tradeCode = null;
-    window.tradeFlow = null;
-    window.currentTradeStep = null;
+  exitTrade() {
+    window.exitTrade();
+  },
 
-    tradepage.props.navigation.goBack();
+  /**
+   * 初始化交易画面
+   * @author Lucifer
+   * @param tradepage 交易画面对象
+   */
+  initTradePage(tradepage) {
+    window.tradepage = tradepage;
   },
 
   /**
@@ -180,7 +249,7 @@ export default {
    * @author Lucifer
    */
   clearTradeData() {
-    window.currentTradeData = {};
+    clearTradeData();
   },
 
   /**
@@ -189,6 +258,33 @@ export default {
    * @param tradepage 交易画面
    */
   startTrade(tradepage) {
+    saveCurrentTradeToStorage();
+
+    window.tradeEvent = BackHandler.addEventListener("hardwareBackPress", window.exitTrade);
+
     tradepage.props.navigation.replace(`${window.tradeCode}-${getCurrentTradeStepName()}`);
+  },
+
+  /**
+   * 恢复交易页面
+   * @author Lucifer
+   */
+  recoverTrade(tradepage) {
+    console.log("恢复交易");
+    $Storage.load({key: 'tradeInfo'}).then(result => {
+      const tradeInfo = JSON.parse(result);
+
+      window.tradeCode = tradeInfo.tradeCode;
+      window.tradeFlow = tradeInfo.tradeFlow;
+      window.currentTradeStep = tradeInfo.currentTradeStep;
+      window.currentTradeData = tradeInfo.currentTradeData;
+
+      window.tradeEvent = BackHandler.addEventListener("hardwareBackPress", window.exitTrade);
+
+      tradepage.props.navigation.replace(`${window.tradeCode}-${getCurrentTradeStepName()}`);
+    }).catch(err => {
+      alert("没有保存的交易信息！");
+      tradepage.props.navigation.goBack();
+    })
   }
 }

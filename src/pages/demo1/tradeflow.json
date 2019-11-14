@@ -63,10 +63,12 @@
     },
     "other": {
       "title": "page22",
+      "back": false,
       "default": {
         "title": "page4",
         "default": {
-          "title": "page5"
+          "title": "page5",
+          "back": false
         }
       }
     }

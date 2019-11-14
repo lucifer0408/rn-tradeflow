@@ -7,6 +7,7 @@ import TradeUtil from "$/trade-control";
 module.exports = class ${className} extends React.Component {
   constructor(props) {
     super(props);
+    TradeUtil.initTradePage(this);
   }
   render() {
     return (<View />)

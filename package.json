@@ -13,9 +13,11 @@
     "init-tradepage": "agree init-tradepage"
   },
   "dependencies": {
+    "@react-native-community/async-storage": "^1.6.2",
     "react": "16.9.0",
     "react-native": "0.61.4",
     "react-native-gesture-handler": "^1.5.0",
+    "react-native-storage": "^1.0.1",
     "react-navigation": "^3.11.1"
   },
   "devDependencies": {

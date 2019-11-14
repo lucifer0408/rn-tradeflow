@@ -6,6 +6,7 @@ import TradeUtil from "$/trade-control";
 module.exports = class Page1 extends React.Component {
   constructor(props) {
     super(props);
+    TradeUtil.initTradePage(this);
 
     this.state = {}
   }
@@ -18,9 +19,9 @@ module.exports = class Page1 extends React.Component {
           TradeUtil.setTradeData("tradedata", "current");
         }}></Button>
         <Text>点击按钮进入下一步，去往Page2.1</Text>
-        <Button title={`下一步`} onPress={() => {TradeUtil.nextStep(this);}}></Button>
+        <Button title={`下一步`} onPress={() => {TradeUtil.nextStep();}}></Button>
         <Text>点击按钮进入下一步，去往Page2.2</Text>
-        <Button title={`下一步`} onPress={() => {TradeUtil.nextStep(this, "other");}}></Button>
+        <Button title={`下一步`} onPress={() => {TradeUtil.nextStep("other");}}></Button>
       </View>
     )
   }

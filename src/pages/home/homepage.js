@@ -5,8 +5,8 @@ import { NavigationEvents } from "react-navigation";
 module.exports = class Homepage extends React.Component {
   constructor(props) {
     super(props);
-    
-    this.state = {}
+
+    this.state = {};
 
     this.jumpToTrade = this.jumpToTrade.bind(this);
   }
@@ -29,6 +29,15 @@ module.exports = class Homepage extends React.Component {
         <Button title="点击进入Demo1交易" onPress={() => {this.jumpToTrade("demo1")}}></Button>
       </View>
     )
+  }
+
+  componentDidMount() {
+    const _this = this;
+    $Storage.load({key: "tradeInfo"}).then(result => {
+      _this.props.navigation.navigate("tradetemplate");
+    }).catch(err => {
+      console.log("没有找到保存的交易");
+    });
   }
 
   jumpToTrade(tradecode) {
