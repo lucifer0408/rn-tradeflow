@@ -2,7 +2,9 @@
  * 交易流程控制
  * @author Lucifer
  */
-import { BackHandler } from "react-native";
+import {BackHandler} from 'react-native';
+import TradeData from './trade-data';
+import SyncTrade from './sync-trade';
 
 // 设置交易流程的全局参数
 // 交易码
@@ -20,11 +22,6 @@ if (!window.currentTradeStep) {
   window.currentTradeStep = [];
 }
 
-// 当前交易的数据
-if (!window.currentTradeData) {
-  window.currentTradeData = {};
-}
-
 function getCurrentTradeStep() {
   return window.currentTradeStep[window.currentTradeStep.length - 1];
 }
@@ -32,47 +29,19 @@ function getCurrentTradeStepName() {
   return getCurrentTradeStep().title;
 }
 
-/**
- * 保存当前交易的全部信息
- * @author Lucifer
- */
-function saveCurrentTradeToStorage() {
-  if (window.$Storage) {
-    $Storage.save({
-      key: 'tradeInfo',
-      data: JSON.stringify({
-        tradeCode: window.tradeCode,
-        tradeFlow: window.tradeFlow,
-        currentTradeStep: window.currentTradeStep,
-        currentTradeData: window.currentTradeData
-      })
-    });
-  } else {
-    console.log("没有本地存储模块！");
-  }
-}
-
-function clearCurrentTradeFromStorage() {
-  if (window.$Storage) {
-    $Storage.remove({
-      key: 'tradeInfo',
-    });
-  } else {
-    console.log("没有本地存储模块！");
-  }
-}
-
-function clearTradeData() {
-  window.currentTradeData = {};
-}
-
 window.exitTrade = () => {
   // 清空交易相关数据
   window.tradeCode = null;
   window.tradeFlow = null;
   window.currentTradeStep.splice(0, window.currentTradeStep.length);
-  clearTradeData();
-  clearCurrentTradeFromStorage();
+
+  const promise = TradeData.clearTradeData();
+  if (promise) {
+    promise.then(result => {
+      SyncTrade.clearTradeInfo();
+    });
+  }
+
   if (window.tradepage) {
     window.tradepage.props.navigation.goBack();
     window.tradepage = null;
@@ -80,7 +49,7 @@ window.exitTrade = () => {
   window.tradeEvent.remove();
   window.tradeEvent = null;
   return true;
-}
+};
 
 export default {
   /**
@@ -117,21 +86,23 @@ export default {
    */
   nextStep(out) {
     if (!out) {
-      out = "default";
+      out = 'default';
     }
 
-    if (out === "title" || out === "back") {
-      alert("流程出口信息错误！");
+    if (out === 'title' || out === 'back') {
+      alert('流程出口信息错误！');
       return;
     }
 
-    if (!getCurrentTradeStep()[out]) {
+    if (out === 'default' && !getCurrentTradeStep()[out]) {
+      this.exitTrade();
+    } else if (out !== 'default' && !getCurrentTradeStep()[out]) {
       alert(`当前的流程节点出口“${out}”不存在！`);
     } else {
       window.currentTradeStep.push(getCurrentTradeStep()[out]);
       const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
 
-      saveCurrentTradeToStorage();
+      SyncTrade.syncTradeInfo();
 
       window.tradepage.props.navigation.replace(routerName);
     }
@@ -154,7 +125,12 @@ export default {
         if (window.currentTradeStep.length === 1) {
           break;
         }
-        if (!(window.currentTradeStep[window.currentTradeStep.length - 1].back == false)) {
+        if (
+          !(
+            window.currentTradeStep[window.currentTradeStep.length - 1].back ==
+            false
+          )
+        ) {
           stepCount++;
           window.currentTradeStep.pop();
         } else {
@@ -165,14 +141,14 @@ export default {
       if (stepCount > 0) {
         const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
 
-        saveCurrentTradeToStorage();
+        SyncTrade.syncTradeInfo();
 
         window.tradepage.props.navigation.replace(routerName);
       } else {
-        alert("当前流程节点不允许退回");
+        alert('当前流程节点不允许退回');
       }
     } else if (window.currentTradeStep.length === 1) {
-      window.exitTrade();
+      this.exitTrade();
     }
   },
 
@@ -185,6 +161,50 @@ export default {
   },
 
   /**
+   * 设置交易数据
+   * @author Lucifer
+   * @param key 交易数据Key
+   * @param value 交易数据Value
+   */
+  setTradeData(key, value) {
+    TradeData.setTradeData(key, value);
+  },
+
+  /**
+   * 根据key获取交易数据
+   * @author Lucifer
+   * @param key 交易数据Key
+   */
+  getTradeData(key) {
+    return TradeData.getTradeData(key);
+  },
+
+  /**
+   * 获取所有交易数据
+   * @author Lucifer
+   */
+  getAllTradeData() {
+    return TradeData.getAllTradeData();
+  },
+
+  /**
+   * 根据Key删除交易数据
+   * @author Lucifer
+   * @param key 交易数据Key
+   */
+  removeTradeData(key) {
+    TradeData.removeTradeData(key);
+  },
+
+  /**
+   * 清空交易数据
+   * @author Lucifer
+   */
+  clearTradeData() {
+    TradeData.clearTradeData();
+  },
+
+  /**
    * 初始化交易画面
    * @author Lucifer
    * @param tradepage 交易画面对象
@@ -194,76 +214,21 @@ export default {
   },
 
   /**
-   * 设置交易数据
-   * @author Lucifer
-   * @param key 交易数据Key
-   * @param value 交易数据Value
-   */
-  setTradeData(key, value) {
-    if (!window.currentTradeData) {
-      window.currentTradeData = {};
-    }
-
-    window.currentTradeData[key] = value;
-  },
-
-  /**
-   * 获取交易数据
-   * @author Lucifer
-   * @param key 交易数据Key
-   */
-  getTradeData(key) {
-    if (!window.currentTradeData) {
-      window.currentTradeData = {};
-    }
-
-    return window.currentTradeData[key];
-  },
-
-  /**
-   * 获取交易全部数据
-   * @author Lucifer
-   */
-  getAllTradeData() {
-    if (!window.currentTradeData) {
-      window.currentTradeData = {};
-    }
-
-    return window.currentTradeData;
-  },
-
-  /**
-   * 根据Key删除交易数据
-   * @author Lucifer
-   * @param key 交易数据Key
-   */
-  removeTradeData(key) {
-    if (!window.currentTradeData) {
-      window.currentTradeData = {};
-    }
-
-    delete window.currentTradeData[key];
-  },
-
-  /**
-   * 清空交易数据
-   * @author Lucifer
-   */
-  clearTradeData() {
-    clearTradeData();
-  },
-
-  /**
    * 开始交易
    * @author Lucifer
    * @param tradepage 交易画面
    */
   startTrade(tradepage) {
-    saveCurrentTradeToStorage();
+    SyncTrade.syncTradeInfo();
 
-    window.tradeEvent = BackHandler.addEventListener("hardwareBackPress", window.exitTrade);
+    window.tradeEvent = BackHandler.addEventListener(
+      'hardwareBackPress',
+      window.exitTrade,
+    );
 
-    tradepage.props.navigation.replace(`${window.tradeCode}-${getCurrentTradeStepName()}`);
+    tradepage.props.navigation.replace(
+      `${window.tradeCode}-${getCurrentTradeStepName()}`,
+    );
   },
 
   /**
@@ -271,21 +236,30 @@ export default {
    * @author Lucifer
    */
   recoverTrade(tradepage) {
-    console.log("恢复交易");
-    $Storage.load({key: 'tradeInfo'}).then(result => {
-      const tradeInfo = JSON.parse(result);
+    const tradeInfo = SyncTrade.getTradeInfo();
 
-      window.tradeCode = tradeInfo.tradeCode;
-      window.tradeFlow = tradeInfo.tradeFlow;
-      window.currentTradeStep = tradeInfo.currentTradeStep;
-      window.currentTradeData = tradeInfo.currentTradeData;
+    if (tradeInfo) {
+      tradeInfo.then(result => {
+        const tradeInfo = JSON.parse(result);
 
-      window.tradeEvent = BackHandler.addEventListener("hardwareBackPress", window.exitTrade);
+        window.tradeCode = tradeInfo.tradeCode;
+        window.tradeFlow = tradeInfo.tradeFlow;
+        window.currentTradeStep = tradeInfo.currentTradeStep;
+        window.currentTradeData = tradeInfo.currentTradeData;
 
-      tradepage.props.navigation.replace(`${window.tradeCode}-${getCurrentTradeStepName()}`);
-    }).catch(err => {
-      alert("没有保存的交易信息！");
-      tradepage.props.navigation.goBack();
-    })
+        window.tradeEvent = BackHandler.addEventListener(
+          'hardwareBackPress',
+          window.exitTrade,
+        );
+
+        tradepage.props.navigation.replace(
+          `${window.tradeCode}-${getCurrentTradeStepName()}`,
+        );
+      })
+      .catch(err => {
+        alert('没有保存的交易信息！');
+        tradepage.props.navigation.goBack();
+      });
+    }
   }
-}
+};
