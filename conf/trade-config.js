@@ -8,7 +8,7 @@ module.exports = {
    * 如果保存到服务器上，所有的流程（公共流程和交易私有流程）都必须从服务器端获取
    * @author Lucifer
    */
-  saveOnServer: true,
+  saveOnServer: false,
   /**
    * 获取交易流程配置的服务端地址，当saveOnServer=true时启用
    * @author Lucifer
