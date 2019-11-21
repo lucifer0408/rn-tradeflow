@@ -13,12 +13,12 @@ module.exports = {
    * 获取交易流程配置的服务端地址，当saveOnServer=true时启用
    * @author Lucifer
    */
-  tradeInfoAddress: 'http://data.nineheaven.top:10086/service/tradeflow/getTradeflowConfig',
+  tradeInfoAddress: 'http://localhost:8080/service/tradeflow/getTradeflowConfig',
   /**
    * 获取公共流程配置的服务端地址，当saveOnServer=true时启用
    * @author Lucifer
    */
-  publicTradeInfoAddress: 'http://data.nineheaven.top:10086/service/tradeflow/getTradeflowConfig',
+  publicTradeInfoAddress: 'http://localhost:8080/service/tradeflow/getTradeflowConfig',
   /**
    * 是否从服务端获取系统参数配置，例如交易异常退出后的恢复时间等
    * @author Lucifer
