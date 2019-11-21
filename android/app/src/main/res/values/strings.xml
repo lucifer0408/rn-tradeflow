@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">demo1</string>
+    <string name="app_name_release">交易引擎</string>
 </resources>

@@ -2,7 +2,7 @@ const fs = require('fs');
 const process = require('process');
 const chalk = require('chalk');
 
-const tradeBasePath = `${process.cwd()}/src/pages`;
+const tradeBasePath = `${process.cwd()}/src/www/trade`;
 
 module.exports = function(tradecode) {
   console.log('交易码: ', tradecode);

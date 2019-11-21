@@ -1,44 +1,23 @@
 import {createStackNavigator} from 'react-navigation';
 
 const tradeRouters = require('./tradeRouters');
-
-// 根据交易路由生成对应的路由配置
-function buildTradeRouters() {
-  let retList = {};
-  for (let trade in tradeRouters) {
-    const config = tradeRouters[trade];
-    const tradeSteps = config.pages;
-
-    console.log(trade);
-    tradeSteps.map((node, index) => {
-      let currentTradeRoute = {};
-      currentTradeRoute.screen = node.screen;
-      currentTradeRoute.componentName = `${trade}-${node.componentName}`;
-      currentTradeRoute.navigationOptions = node.navigationOptions
-        ? node.navigationOptions
-        : {header: null};
-
-      retList[`${trade}-${node.componentName}`] = currentTradeRoute;
-    });
-  }
-
-  return retList;
-}
+const publicRouters = require('./publicRoutes');
 
 let routerList = Object.assign(
   {
     homepage: {
-      screen: require('$/pages/home/homepage'),
+      screen: require('$/www/home/homepage'),
       componentName: 'homepage',
       navigationOptions: {header: null},
     },
     tradetemplate: {
-      screen: require('$/pages/templates/tradetemplate'),
+      screen: require('$/www/templates/tradetemplate'),
       componentName: 'tradetemplate',
       navigationOptions: {header: null},
     },
   },
-  buildTradeRouters(),
+  tradeRouters,
+  publicRouters
 );
 
 module.exports = createStackNavigator(routerList, {

@@ -1,0 +1,93 @@
+{
+  "tradecode": "demo1",
+  "pages": [
+    {
+      "title": "page1",
+      "path": "$/www/trade/demo1/tradepages/page1",
+      "componentName": "page1",
+      "navigationOptions": {
+        "header": null
+      }
+    },
+    {
+      "title": "page21",
+      "path": "$/www/trade/demo1/tradepages/page2.1",
+      "componentName": "page21",
+      "navigationOptions": {
+        "header": null
+      }
+    },
+    {
+      "title": "page22",
+      "path": "$/www/trade/demo1/tradepages/page2.2",
+      "componentName": "page22",
+      "navigationOptions": {
+        "header": null
+      }
+    },
+    {
+      "title": "page3",
+      "path": "$/www/trade/demo1/tradepages/page3",
+      "componentName": "page3",
+      "navigationOptions": {
+        "header": null
+      }
+    },
+    {
+      "title": "page4",
+      "path": "$/www/trade/demo1/tradepages/page4",
+      "componentName": "page4",
+      "navigationOptions": {
+        "header": null
+      }
+    },
+    {
+      "title": "page5",
+      "path": "$/www/trade/demo1/tradepages/page5",
+      "componentName": "page5",
+      "navigationOptions": {
+        "header": null
+      }
+    }
+  ],
+  "tradeflow": {
+    "subflow": "public1",
+    "name": "public1",
+    "default": {
+      "title": "page1",
+      "back": false,
+      "recovery": false,
+      "name": "page1",
+      "default": {
+        "subflow": "public2",
+        "name": "public2",
+        "default": {
+          "title": "page21",
+          "name": "page21",
+          "default": {
+            "title": "page3",
+            "name": "page3",
+            "default": {
+              "title": "page5",
+              "name": "page5"
+            }
+          }
+        }
+      },
+      "other": {
+        "title": "page22",
+        "name": "page22",
+        "back": false,
+        "default": {
+          "title": "page4",
+          "name": "page4",
+          "default": {
+            "title": "page5",
+            "name": "page5",
+            "back": false
+          }
+        }
+      }
+    }
+  }
+}

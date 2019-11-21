@@ -2,9 +2,17 @@
  * 交易流程控制
  * @author Lucifer
  */
+
+/**
+ * 用Key，公共流程中非出口的key描述
+ * */
+const defaultKeys = ['title', 'subflow', 'back', 'recovery', 'name', 'public'];
+
 import {BackHandler} from 'react-native';
 import TradeData from './trade-data';
 import SyncTrade from './sync-trade';
+import PublicTrade from './public-trade';
+import getTrade from '$/trade-control/get-trade';
 
 // 设置交易流程的全局参数
 // 交易码
@@ -22,25 +30,39 @@ if (!window.currentTradeStep) {
   window.currentTradeStep = [];
 }
 
+// 交易恢复标识
+if (window.tradeRecovery === undefined) {
+  window.tradeRecovery = true;
+}
+
+/**
+ * 获取当前的流程节点
+ * @author Lucifer
+ */
 function getCurrentTradeStep() {
   return window.currentTradeStep[window.currentTradeStep.length - 1];
 }
+
+/**
+ * 获取当前流程节点的标题
+ * @author Lucifer
+ */
 function getCurrentTradeStepName() {
   return getCurrentTradeStep().title;
 }
 
+/**
+ * 退出交易方法
+ * @author Lucifer
+ */
 window.exitTrade = () => {
   // 清空交易相关数据
   window.tradeCode = null;
   window.tradeFlow = null;
   window.currentTradeStep.splice(0, window.currentTradeStep.length);
 
-  const promise = TradeData.clearTradeData();
-  if (promise) {
-    promise.then(result => {
-      SyncTrade.clearTradeInfo();
-    });
-  }
+  TradeData.clearTradeData();
+  SyncTrade.clearTradeInfo();
 
   if (window.tradepage) {
     window.tradepage.props.navigation.goBack();
@@ -50,6 +72,42 @@ window.exitTrade = () => {
   window.tradeEvent = null;
   return true;
 };
+
+/**
+ * 根据当前查找到的节点和出口跳到指定的节点
+ * @author Lucifer
+ * */
+function jumpToNextByOut(node, out) {
+  const nodeCopy = JSON.parse(JSON.stringify(node));
+  defaultKeys.forEach(key => {
+    delete nodeCopy[key];
+  });
+
+  if (Object.keys(nodeCopy).length === 0) {
+    // 没有配置任何出口
+    this.exitTrade();
+  } else if (!nodeCopy[out]) {
+    alert(`当前的流程节点出口“${out}”不存在！`);
+  } else {
+    const nextNode = node[out];
+    window.currentTradeStep.push(nextNode);
+
+    if (nextNode.title) {
+      const routerName = `${window.tradeCode}-${nextNode.title}`;
+      if (window.tradeRecovery) {
+        SyncTrade.syncTradeInfo();
+      }
+      window.tradepage.props.navigation.replace(routerName);
+    } else if (nextNode.subflow) {
+      getTrade.getPublicFlow(nextNode.subflow, result => {
+        PublicTrade.startPublicTradeFlow(result, window.tradepage);
+      });
+    } else {
+      alert('流程配置不正确');
+      this.exitTrade();
+    }
+  }
+}
 
 export default {
   /**
@@ -67,6 +125,22 @@ export default {
    */
   setTradeCode(tradecode) {
     window.tradeCode = tradecode;
+  },
+
+  /**
+   * 设置交易恢复标识
+   * @author Lucifer
+   * */
+  setTradeRecovery(recovery) {
+    window.tradeRecovery = recovery;
+  },
+
+  /**
+   * 获取交易恢复标识
+   * @author Lucifer
+   * */
+  getTradeRecovery() {
+    return window.tradeRecovery;
   },
 
   /**
@@ -89,22 +163,45 @@ export default {
       out = 'default';
     }
 
-    if (out === 'title' || out === 'back') {
+    if (defaultKeys.indexOf(out) !== -1) {
       alert('流程出口信息错误！');
       return;
     }
 
-    if (out === 'default' && !getCurrentTradeStep()[out]) {
-      this.exitTrade();
-    } else if (out !== 'default' && !getCurrentTradeStep()[out]) {
-      alert(`当前的流程节点出口“${out}”不存在！`);
-    } else {
-      window.currentTradeStep.push(getCurrentTradeStep()[out]);
-      const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
+    // 是否在交易主流程执行下一步的操作
+    // 2 - 主流程执行+1
+    // 1 - 无操作
+    // 0 - 公共流程结束
+    // -1 - 公共流程中出口配置错误
+    let tradeExec = 2;
 
-      SyncTrade.syncTradeInfo();
+    const currentNode = JSON.parse(JSON.stringify(getCurrentTradeStep()));
+    const isPublic = currentNode.public;
+    // 当前在公共流程中，公共流程+1
+    if (isPublic) {
+      tradeExec = PublicTrade.nextStep(out);
+    }
 
-      window.tradepage.props.navigation.replace(routerName);
+    // 如果需要主流程执行
+    switch (tradeExec) {
+      case 2:
+        jumpToNextByOut(currentNode, out);
+        break;
+      case 1:
+        break;
+      case 0:
+        const currentFlowLength = window.currentTradeStep.length;
+
+        for (let i = currentFlowLength - 1; i >= 0; i--) {
+          const node = window.currentTradeStep[i];
+          if (node.subflow) {
+            jumpToNextByOut(node, out);
+            break;
+          }
+        }
+        break;
+      default:
+        alert('公共流程出口配置错误，无需操作');
     }
   },
 
@@ -115,40 +212,50 @@ export default {
    * @param count 需要回退的步骤数量，默认为1
    */
   back(count) {
-    if (window.currentTradeStep.length > 1) {
-      if (!count) {
-        count = 1;
-      }
-      // 逐步弹出流程记录栈顶元素；如果碰到流程不允许退回的情况，直接break，然后开始计算需要跳转到的目标地址
-      let stepCount = 0;
-      for (let i = 0; i < count; i++) {
-        if (window.currentTradeStep.length === 1) {
+    if (!count) {
+      count = 1
+    }
+    let stepCount = 0;
+
+    while (true) {
+      let currentStep = getCurrentTradeStep();
+
+      if (currentStep.title) {
+        if (currentStep.back === false) {
           break;
-        }
-        if (
-          !(
-            window.currentTradeStep[window.currentTradeStep.length - 1].back ==
-            false
-          )
-        ) {
-          stepCount++;
-          window.currentTradeStep.pop();
         } else {
-          break;
+          window.currentTradeStep.pop();
+          stepCount++;
         }
       }
 
-      if (stepCount > 0) {
-        const routerName = `${window.tradeCode}-${getCurrentTradeStepName()}`;
-
-        SyncTrade.syncTradeInfo();
-
-        window.tradepage.props.navigation.replace(routerName);
-      } else {
-        alert('当前流程节点不允许退回');
+      currentStep = getCurrentTradeStep();
+      if (!currentStep.title && currentStep.subflow) {
+        // 公共流程
+        window.currentTradeStep.pop();
       }
-    } else if (window.currentTradeStep.length === 1) {
+
+      if (stepCount === count || window.currentTradeStep.length === 0) {
+        break;
+      }
+    }
+
+    if (window.currentTradeStep.length === 0) {
       this.exitTrade();
+    } else {
+      if (stepCount === 0) {
+        alert('当前节点不允许回退');
+      } else {
+        const currentStep = getCurrentTradeStep();
+
+        const routeName = currentStep.public ? currentStep.title : `${this.getTradeCode()}-${currentStep.title}`;
+
+        window.tradepage.props.navigation.replace(routeName);
+
+        if (window.tradeRecovery) {
+          SyncTrade.syncTradeInfo();
+        }
+      }
     }
   },
 
@@ -219,16 +326,36 @@ export default {
    * @param tradepage 交易画面
    */
   startTrade(tradepage) {
-    SyncTrade.syncTradeInfo();
+    const _this = this;
 
     window.tradeEvent = BackHandler.addEventListener(
       'hardwareBackPress',
       window.exitTrade,
     );
 
-    tradepage.props.navigation.replace(
-      `${window.tradeCode}-${getCurrentTradeStepName()}`,
-    );
+    // 如果是以公共节点开始，需要跳转公共流程，并打开相应公共流程的节点
+    const currentStep = getCurrentTradeStep();
+    if (currentStep.title) {
+      tradepage.props.navigation.replace(
+        `${window.tradeCode}-${getCurrentTradeStepName()}`,
+      );
+      if (window.tradeRecovery) {
+        SyncTrade.syncTradeInfo();
+      }
+    } else if (currentStep.subflow) {
+      // 公共流程
+      getTrade.getPublicFlow(currentStep.subflow, result => {
+        if (result) {
+          PublicTrade.startPublicTradeFlow(result, tradepage);
+        } else {
+          window.exitTrade();
+        }
+      });
+
+    } else {
+      alert("流程配置不正确！");
+      tradepage.props.navigation.goBack();
+    }
   },
 
   /**
@@ -242,19 +369,46 @@ export default {
       tradeInfo.then(result => {
         const tradeInfo = JSON.parse(result);
 
+        // 恢复交易异常退出时所有的数据
         window.tradeCode = tradeInfo.tradeCode;
         window.tradeFlow = tradeInfo.tradeFlow;
         window.currentTradeStep = tradeInfo.currentTradeStep;
         window.currentTradeData = tradeInfo.currentTradeData;
+        window.tradeRecovery = true;
 
         window.tradeEvent = BackHandler.addEventListener(
           'hardwareBackPress',
           window.exitTrade,
         );
 
-        tradepage.props.navigation.replace(
-          `${window.tradeCode}-${getCurrentTradeStepName()}`,
-        );
+        // 根据交易过程的recovery标志，找到需要恢复到的交易画面
+        let recoveryNode = null, recoveryIndex = -1;
+        for (let i = 0; i < window.currentTradeStep.length; i++) {
+          const currentNode = window.currentTradeStep[i];
+
+          if (currentNode.title) {
+            if (currentNode.recovery === false) {
+              break;
+            } else {
+              recoveryNode = currentNode;
+              recoveryIndex = i;
+            }
+          } else if (!currentNode.title && currentNode.subflow) {
+            // 主流程中subflow的节点，要查找公共流程，不处理
+            continue;
+          } else {
+            break;
+          }
+        }
+
+        if (recoveryIndex !== -1) {
+          const routeName = recoveryNode.public ? recoveryNode.title : `${this.getTradeCode()}-${recoveryNode.title}`;
+          window.currentTradeStep.splice(recoveryIndex + 1);
+          tradepage.props.navigation.replace(routeName);
+        } else {
+          alert('交易不可恢复')
+          tradepage.props.navigation.goBack();
+        }
       })
       .catch(err => {
         alert('没有保存的交易信息！');

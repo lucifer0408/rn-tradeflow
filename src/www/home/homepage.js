@@ -2,6 +2,10 @@ import React from "react";
 import { View, Button, Text } from "react-native";
 import { NavigationEvents } from "react-navigation";
 
+import { getConfigFromServer, defaultRecoveryTimeout } from "$/../conf/trade-config"
+
+const request = require('$/util/request')
+
 module.exports = class Homepage extends React.Component {
   constructor(props) {
     super(props);
@@ -33,11 +37,29 @@ module.exports = class Homepage extends React.Component {
 
   componentDidMount() {
     const _this = this;
-    $Storage.load({key: "tradeInfo"}).then(result => {
-      _this.props.navigation.navigate("tradetemplate");
-    }).catch(err => {
-      console.log("没有找到保存的交易");
-    });
+
+    // 获取系统参数
+    if (getConfigFromServer) {
+      request('http://data.nineheaven.top:10086/service/getsysparam/getparam', {paramkey: 'recoverytime'}, result => {
+        window.recoverytime = parseInt(result.paramvalue);
+
+        $Storage.load({key: "tradeInfo"}).then(result => {
+          _this.props.navigation.navigate("tradetemplate");
+        }).catch(err => {
+          console.log("没有找到保存的交易");
+        });
+      });
+    } else {
+      $Storage.load({key: "tradeInfo"}).then(result => {
+        console.log(JSON.parse(result));
+        _this.props.navigation.navigate("tradetemplate");
+      }).catch(err => {
+        console.log("没有找到保存的交易");
+      });
+    }
+
+
+
   }
 
   jumpToTrade(tradecode) {

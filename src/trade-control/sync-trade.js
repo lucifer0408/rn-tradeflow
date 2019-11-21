@@ -15,8 +15,9 @@ export default {
           tradeCode: window.tradeCode,
           tradeFlow: window.tradeFlow,
           currentTradeStep: window.currentTradeStep,
-          currentTradeData: window.currentTradeData
-        })
+          currentTradeData: window.currentTradeData,
+          tradeRecovery: window.tradeRecovery,
+        }),
       });
     } else {
       console.log("存储模块没有初始化！");
@@ -40,5 +41,5 @@ export default {
       console.log("存储模块没有初始化！");
       return null;
     }
-  }
-}
+  },
+};

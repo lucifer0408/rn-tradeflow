@@ -2,7 +2,7 @@ const fs = require("fs");
 const process = require("process");
 const chalk = require("chalk");
 
-const tradeBasePath = `${process.cwd()}/src/pages`;
+const tradeBasePath = `${process.cwd()}/src/www/trade`;
 const templatePath = `${process.cwd()}/lucifer_templates/tradepage-template/index.js`;
 const babelPlugin = require(`${process.cwd()}/babel.config`).plugins;
 

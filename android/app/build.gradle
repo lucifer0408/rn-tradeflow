@@ -127,6 +127,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    aaptOptions.cruncherEnabled = false
+    aaptOptions.useNewCruncher = false
+
     defaultConfig {
         applicationId "com.demo1"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -160,6 +163,7 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            applicationIdSuffix ".release"
         }
     }
     // applicationVariants are e.g. debug, release

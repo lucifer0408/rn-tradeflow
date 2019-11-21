@@ -2,15 +2,13 @@
  * 交易数据管理模块
  * @author Lucifer
  */
-import SyncTrade from "./sync-trade";
-
 // 当前交易的数据
 if (!window.currentTradeData) {
   window.currentTradeData = {};
 }
 
 export default {
-/**
+  /**
    * 设置交易数据
    * @author Lucifer
    * @param key 交易数据Key
@@ -22,8 +20,6 @@ export default {
     }
 
     window.currentTradeData[key] = value;
-
-    return SyncTrade.syncTradeInfo();
   },
 
   /**
@@ -62,8 +58,6 @@ export default {
     }
 
     delete window.currentTradeData[key];
-
-    return SyncTrade.syncTradeInfo();
   },
 
   /**
@@ -72,7 +66,5 @@ export default {
    */
   clearTradeData() {
     window.currentTradeData = {};
-
-    return SyncTrade.syncTradeInfo();
   },
-}
+};

@@ -1,0 +1,11 @@
+{
+  "tradecode": "public1",
+  "tradeflow": {
+    "title": "publicpage1",
+    "name": "publicpage1",
+    "default": {
+      "title": "publicpage2",
+      "name": "publicpage2"
+    }
+  }
+}
